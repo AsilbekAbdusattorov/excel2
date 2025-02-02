@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Excel Data</title>
+    <style>
+        /* Global reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Top bar with Date and Time */
+        .top-bar {
+            background: linear-gradient(45deg, #ff6a00, #ff3f34);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            position: fixed;
+            top: 20px;
+            width: 90%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .top-bar .date {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .top-bar .time {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Container for the table */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 100px;
+            padding: 30px;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        /* Animation for container */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Heading styling */
+        h2 {
+            text-align: center;
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff6a00, #ff3f34);
+            color: transparent;
+            -webkit-background-clip: text;
+            padding: 10px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: textGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 10px rgba(255, 106, 0, 0.8), 0 0 20px rgba(255, 106, 0, 0.8); }
+            100% { text-shadow: 0 0 15px rgba(255, 106, 0, 1), 0 0 30px rgba(255, 106, 0, 1); }
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        th {
+            background: #007BFF;
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Column separators */
+        th, td {
+            border-left: 1px solid #ddd;
+        }
+
+        /* Hover effect */
+        tbody tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        tbody tr:hover td {
+            color: #007BFF;
+        }
+
+        /* Smooth row animation */
+        tbody tr {
+            opacity: 0;
+            animation: slide-in 0.7s forwards;
+        }
+
+        @keyframes slide-in {
+            0% {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Add new container styling */
+        .new-container {
+            width: 80%;
+            max-width: 1000px;
+            margin-top: 50px;
+            padding: 30px;
+            background-color: #e9f7fa;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            position: relative;
+            opacity: 0;
+            animation: slideUp 1s forwards;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Slide up animation for the new container */
+        @keyframes slideUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Button for adding new container */
+        .add-container-btn {
+            padding: 15px 25px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-container-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive table */
+        @media (max-width: 768px) {
+            th, td {
+                font-size: 12px;
+                padding: 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top bar with Date and Time -->
+    <div class="top-bar" id="current-time">
+        <div class="date" id="current-date"></div>
+        <div class="time" id="current-clock"></div>
+    </div>
+
+    <!-- Main container for table -->
+    <div class="container">
+        <h2>Real-time Excel Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Name</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="data-table"></tbody>
+        </table>
+    </div>
+
+    <!-- Button to add a new container -->
+    <button class="add-container-btn" onclick="addNewContainer()">Add New Container</button>
+
+    <script>
+        // Format time to 12-hour format (with AM/PM)
+        function parseTime(timeString) {
+            if (!timeString) return null;
+
+            const regex = /(\d{1,2})[:.](\d{2})\s*(am|pm)/i;
+            const match = timeString.match(regex);
+            if (!match) return null;
+
+            let hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
+            const period = match[3].toLowerCase();
+
+            if (period === 'pm' && hours < 12) hours += 12;
+            if (period === 'am' && hours === 12) hours = 0;
+
+            return new Date(1970, 0, 1, hours, minutes);
+        }
+
+        // Calculate time difference in hours and minutes
+        function calculateTime(start, end) {
+            const startTime = parseTime(start);
+            const endTime = parseTime(end);
+
+            if (!startTime || !endTime) return "Pending";
+
+            const diffMs = endTime - startTime;
+            if (diffMs < 0) return "Pending";
+
+            const diffMin = Math.floor(diffMs / 60000);
+            const hours = Math.floor(diffMin / 60);
+            const minutes = diffMin % 60;
+
+            return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+        }
+
+        // Calculate the status based on start and end times
+        function calculateStatus(start, end) {
+            if (end) return "Ready";
+            if (start) return "Working";
+            return "Pending";
+        }
+
+        // Fetch the data from the Flask backend
+        function fetchData() {
+            fetch("http://127.0.0.1:5000/data")
+                .then(response => response.json())
+                .then(data => {
+                    let table = document.getElementById("data-table");
+                    table.innerHTML = "";
+
+                    if (data.error) {
+                        console.error("Error:", data.error);
+                        alert("Error: " + data.error);
+                        return;
+                    }
+
+                    if (!Array.isArray(data)) {
+                        console.error("Data is not an array:", data);
+                        return;
+                    }
+
+                    data.reverse();
+
+                    data.forEach((row, index) => {
+                        let time = calculateTime(row.START, row.END);
+                        let status = calculateStatus(row.START, row.END);
+
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${row.NAME}</td>
+                            <td>${row.START}</td>
+                            <td>${row.END}</td>
+                            <td>${time}</td>
+                            <td>${status}</td>
+                        `;
+                        table.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+
+        // Update current date and time
+        function updateCurrentTime() {
+            const now = new Date();
+            const date = now.toLocaleDateString();
+            const time = now.toLocaleTimeString();
+
+            document.getElementById("current-date").innerText = date;
+            document.getElementById("current-clock").innerText = time;
+        }
+
+        // Add a new container with smooth animation
+        function addNewContainer() {
+            const newContainer = document.createElement("div");
+            newContainer.className = "new-container";
+            newContainer.innerHTML = `
+                <h2>New Container Added</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Name</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- New rows will be added dynamically -->
+                    </tbody>
+                </table>
+            `;
+            document.body.appendChild(newContainer);
+        }
+
+        // Initial calls
+        setInterval(updateCurrentTime, 1000); // Update time every second
+        setInterval(fetchData, 30000); // Fetch new data every 30 seconds
+
+        fetchData(); // Initial fetch to load data
+    </script>
+
+</body>
+</html>
